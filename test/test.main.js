@@ -1,6 +1,6 @@
 var console = jstestdriver.console;
 
-TestCase('PolyfillTest', {
+AsyncTestCase('PolyfillTest', {
 
     setUp: function() {
 
@@ -45,6 +45,62 @@ TestCase('PolyfillTest', {
     	}
 
     	assertTrue('Style.sheet.cssRules.length is 0.', sheet.cssRules.length == 0);
+    },
+
+    'test: xhr and xdr' : function(queue) {
+        var responseText1 = '';
+        var responseText2 = '';
+        var responseText3 = '';
+
+        var xhr = new XMLHttpRequest();
+
+        queue.call('Step1: xhr test.', function(callbacks){
+
+            var onComplete = callbacks.add(function(xhr){
+                responseText1 = xhr.responseText;
+                console.log('===== onComplete1: ' + responseText1);                
+            });
+            
+            xhr.open( 'GET', '/test/test/xhrTest1.js', true );
+            xhr.onreadystatechange = function() {
+                if ( xhr.readyState === 4 ){ onComplete(xhr); }
+            };
+            xhr.send( null );
+        });
+
+        queue.call('Step2: xdr test.', function(callbacks){
+
+            var onComplete = callbacks.add(function(xhr){
+                responseText2 = xhr.responseText.substr(4, 14);
+                console.log('===== onComplete2: ' + responseText2);                
+            });
+            
+            xhr.open( 'GET', 'http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js', true );
+            xhr.onreadystatechange = function() {
+                if ( xhr.readyState === 4 ){ onComplete(xhr); }
+            };
+            xhr.send( null );
+        });
+
+        queue.call('Step3: xhr test again.', function(callbacks){
+
+            var onComplete = callbacks.add(function(xhr){
+                responseText3 = xhr.responseText;
+                console.log('===== onComplete3: ' + responseText3);                
+            });
+
+            xhr.open( 'GET', '/test/test/xhrTest2.js', true );
+            xhr.onreadystatechange = function() {
+                if ( xhr.readyState === 4 ){ onComplete(xhr); }
+            };
+            xhr.send( null );
+        });
+
+        queue.call('Step4', function(){
+            assertEquals( '"Hello world.";', responseText1);
+            assertEquals( 'jQuery v1.11.1', responseText2);
+            assertEquals( '"Change the world.";', responseText3);
+        });
     },
     
 });
